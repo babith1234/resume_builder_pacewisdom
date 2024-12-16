@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: darkblue;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header-image {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header-image img {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-header {
+            font-size: 18px;
+            color: darkblue;
+            margin-bottom: 10px;
+            border-bottom: 2px solid darkblue;
+            padding-bottom: 5px;
+        }
+        ul {
+            margin-top: 0;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .project-number {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Image -->
+    <div class="header-image">
+        <img src="{{ header_image_url }}" alt="Header Image">
+    </div>
+
+    <!-- Title -->
+    {% comment %} <h1>Employee Resume</h1> {% endcomment %}
+
+    <!-- Employee Details Section -->
+    <div class="section">
+        <div class="section-header">Employee Details</div>
+        <p><strong>Name:</strong> {{ employee_details.name }}</p>
+        <p><strong> Professional Summary:</strong> {{ employee_details.summary }}</p>
+        {% comment %} <p><strong>Phone Number:</strong> {{ employee_details.phone_number }}</p>
+        <p><strong>Email:</strong> {{ employee_details.email }}</p> {% endcomment %}
+        <p><strong>Technical Skills:</strong></p>
+        <ul>
+            {% for category, skills in employee_details.technical_skills.items %}
+            <li><strong>{{ category }}:</strong> {{ skills|join:", " }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Projects Section -->
+    <div class="section">
+        <div class="section-header">Projects</div>
+        {% for project in projects %}
+        <p class="project-number">Project {{ forloop.counter }}:</p>
+        <p><strong>Project Name:</strong> {{ project.project_name }}</p>
+        <p><strong>Technologies:</strong> {{ project.technologies }}</p>
+        <p><strong>Description:</strong> {{ project.description }}</p>
+        <p><strong>Roles and Responsibilities:</strong></p>
+        <ul>
+            {% for role in project.roles_and_responsibilities %}
+            <li>{{ role }}</li>
+            {% endfor %}
+        </ul>
+        <hr>
+        {% endfor %}
+    </div>
+</body>
+</html>

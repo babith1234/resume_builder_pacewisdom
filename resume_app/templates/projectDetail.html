@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Project</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('/static/back.avif');
+            background-size: cover; /* Ensures the image covers the entire background */
+            background-position: center;
+            background-repeat: no-repeat; 
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .roles-container {
+            margin-top: 15px;
+        }
+        .role-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .role-row input {
+            width: 48%;
+        }
+        #add-role-btn {
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enter Project Details</h1>
+        <form id="project-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="project_name">Project Name</label>
+                <input type="text" id="project_name" name="project_name" required>
+            </div>
+            <div class="form-group">
+                <label for="technologies">Technologies</label>
+                <input type="text" id="technologies" name="technologies" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="4" required></textarea>
+            </div>
+
+            <!-- Roles and Responsibilities Section -->
+            <div class="form-group">
+                <label>Roles and Responsibilities</label>
+                <div id="roles-container" class="roles-container"></div>
+                <div class="role-row">
+                    <input type="text" id="role-input" placeholder="Enter Role">
+                </div>
+                <button type="button" id="add-role-btn">Add Role</button>
+            </div>
+
+            <button type="submit">Create Project</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // Function to get the CSRF token from the cookie
+        function getCSRFToken() {
+            const csrfToken = document.cookie.match(/csrftoken=([\w-]+)/);
+            return csrfToken ? csrfToken[1] : null;
+        }
+
+        const rolesContainer = document.getElementById('roles-container');
+        const addRoleButton = document.getElementById('add-role-btn');
+
+        let rolesArray = [];  // Array to hold the roles
+
+        // Add a new role to the roles container
+        addRoleButton.addEventListener('click', () => {
+            const roleInput = document.getElementById('role-input');
+            const roleValue = roleInput.value.trim();
+
+            if (roleValue) {
+                rolesArray.push(roleValue);  // Add the role to the array
+
+                // Create a new row to display the added role
+                const roleRow = document.createElement('div');
+                roleRow.classList.add('role-row');
+                roleRow.innerHTML = `<input type="text" value="${roleValue}" readonly>`;
+                rolesContainer.appendChild(roleRow);
+
+                // Clear the input field after adding
+                roleInput.value = '';
+            } else {
+                alert('Please enter a role.');
+            }
+        });
+
+        // Handle form submission
+        const form = document.getElementById('project-form');
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            // Check if there's a role in the input field that hasn't been added to the array yet
+            const roleInput = document.getElementById('role-input');
+            const roleValue = roleInput.value.trim();
+            
+            if (roleValue) {
+                // Add the last unsaved role to the array
+                rolesArray.push(roleValue);
+
+                // Create a new row to display the added role
+                const roleRow = document.createElement('div');
+                roleRow.classList.add('role-row');
+                roleRow.innerHTML = `<input type="text" value="${roleValue}" readonly>`;
+                rolesContainer.appendChild(roleRow);
+
+                // Clear the input field
+                roleInput.value = '';
+            }
+
+            // Gather form data
+            const formData = new FormData(form);
+
+            // Convert form data to JSON
+            const jsonData = {};
+            formData.forEach((value, key) => {
+                jsonData[key] = value;
+            });
+
+            // Add the roles array to the form data
+            jsonData['roles_and_responsibilities'] = rolesArray;
+
+            const csrfToken = getCSRFToken();
+
+            // Retrieve employee_id for redirection
+            const employee_id = new URLSearchParams(window.location.search).get('employee_id');
+
+            // Submit data to API
+            try {
+                const response = await fetch(`/project/create/?employee_id=${employee_id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify(jsonData),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('message').innerHTML = `<p style="color: green;">${result.message}</p>`;
+                    form.reset(); // Reset the form
+                    rolesContainer.innerHTML = ''; // Clear the roles container
+
+                    // Redirect to the create project page with employee_id as a query parameter
+                    alert("Details added successfully");                                                                                                        
+                    window.location.href = `http://127.0.0.1:8000/project/create/?employee_id=${employee_id}`;
+                } else {
+                    document.getElementById('message').innerHTML = `<p style="color: red;">Error: ${JSON.stringify(result)}</p>`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

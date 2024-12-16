@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Employee</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url('/static/back.avif');
+            background-size: cover; /* Ensures the image covers the entire background */
+            background-position: center;
+            background-repeat: no-repeat; 
+            margin:10px 0
+        }
+
+        body::-webkit-scrollbar {
+            display: none; /* For Chrome, Safari, and Edge */
+        }
+        .container {
+           
+            width: 100%;
+            max-width: 800px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(147, 37, 37, 0.1);
+            /* Adds space at the top and bottom */
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .skills-container {
+            margin-top: 15px;
+        }
+        .skill-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .skill-row input {
+            width: 48%;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enter Employee Details</h1>
+        <form id="employee-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="employee_id">Employee ID</label>
+                <input type="text" id="employee_id" name="employee_id" required>
+            </div>
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="summary">Professional Summary</label>
+                <textarea id="summary" name="summary" rows="4" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="phone_number">Phone Number</label>
+                <input type="tel" id="phone_number" name="phone_number" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <!-- Dynamic Technical Skills Section -->
+            <div class="form-group">
+                <label>Technical Skills</label>
+                <div id="skills-container" class="skills-container"></div>
+                <div class="skill-row">
+                    <input type="text" id="skill-key" placeholder="Skill Category (e.g., Programming)">
+                    <input type="text" id="skill-values" placeholder="Values (comma-separated, e.g., Python, Java)">
+                </div>
+                <button type="button" id="add-skill-btn" style="width: auto;">Add Skill</button>
+            </div>
+
+            <button type="submit">Create Employee</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+
+        // Function to get the CSRF token from the cookie
+    // Function to get the CSRF token from the cookie
+function getCSRFToken() {
+    const csrfToken = document.cookie.match(/csrftoken=([\w-]+)/);
+    return csrfToken ? csrfToken[1] : null;
+}
+
+const skillsContainer = document.getElementById('skills-container');
+const addSkillButton = document.getElementById('add-skill-btn');
+
+// Initialize skills as an empty object
+let skillsData = {};
+
+// Function to add new skill to the container
+function addSkill() {
+    const skillKeyInput = document.getElementById('skill-key');
+    const skillValuesInput = document.getElementById('skill-values');
+
+    const skillKey = skillKeyInput.value.trim();
+    const skillValues = skillValuesInput.value.trim();
+
+    if (skillKey && skillValues) {
+        // Add skill to the skillsData object
+        if (!skillsData[skillKey]) {
+            skillsData[skillKey] = [];
+        }
+        // Split values by comma and add to the array
+        const valuesArray = skillValues.split(',').map(item => item.trim());
+        skillsData[skillKey] = [...skillsData[skillKey], ...valuesArray];
+
+        // Create a new skill row
+        const skillRow = document.createElement('div');
+        skillRow.classList.add('skill-row');
+        skillRow.innerHTML = `
+            <input type="text" value="${skillKey}" readonly>
+            <input type="text" value="${skillValues}" readonly>
+        `;
+        skillsContainer.appendChild(skillRow);
+
+        // Clear the input fields
+        skillKeyInput.value = '';
+        skillValuesInput.value = '';
+    } else {
+        alert('Please enter both skill category and values.');
+    }
+}
+
+// Event listener for the "Add Skill" button
+addSkillButton.addEventListener('click', addSkill);
+
+// Handle form submission
+const form = document.getElementById('employee-form');
+form.addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    // Add any skill left in the input fields before submitting
+    addSkill();
+
+    // Gather form data
+    const formData = new FormData(form);
+
+    // Convert form data to JSON
+    const jsonData = {};
+    formData.forEach((value, key) => {
+        jsonData[key] = value;
+    });
+
+    // Add skillsData object to the form data
+    jsonData['technical_skills'] = skillsData;
+
+    const csrfToken = getCSRFToken();
+
+    // Retrieve employee_id for redirection
+    const employee_id = document.getElementById('employee_id').value;
+
+    // Submit data to API
+    try {
+        const response = await fetch('/employee/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify(jsonData),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            document.getElementById('message').innerHTML = `<p style="color: green;">${result.message}</p>`;
+            form.reset(); // Reset the form
+            skillsContainer.innerHTML = ''; // Clear the skills container
+
+            // Redirect to the create project page with employee_id as a query parameter
+            window.location.href = `http://127.0.0.1:8000/project/create/?employee_id=${employee_id}`;
+        } else {
+            document.getElementById('message').innerHTML = `<p style="color: red;">Error: ${JSON.stringify(result)}</p>`;
+        }
+    } catch (error) {
+        document.getElementById('message').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+    }
+});
+    </script>
+</body>
+</html>

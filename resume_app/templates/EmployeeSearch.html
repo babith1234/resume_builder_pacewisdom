@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Employee</title>
+    <style>
+        /* Internal CSS for styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url('/static/back.avif');
+            background-size: cover; /* Ensures the image covers the entire background */
+            background-position: center;
+            background-repeat: no-repeat; 
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px; /* Increased width to fit both search box and image */
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex; /* Flexbox container */
+            justify-content: space-between; /* Ensure search box and image are spaced apart */
+            align-items: center; /* Align items vertically */
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+            width: 100%;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            width: 50%; /* Take 50% of the container width */
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #007bff;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .image-container {
+            width: 45%; /* Take 45% of the container width */
+            text-align: right; /* Align the image to the right */
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .search-box,
+            .image-container {
+                width: 100%;
+                text-align: center;
+            }
+
+            input[type="text"] {
+                width: 70%;
+            }
+
+            button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+  
+    <div class="container">
+        <!-- Search Box on the Left -->
+        <div class="search-box">
+            <input type="text" id="employee-id" placeholder="Enter Employee ID Or Employee name">
+            <button id="search-btn">Search</button>
+        </div>
+
+        <!-- Image on the Right -->
+        <div class="image-container">
+            <img src="/static/resume.png" alt="Employee Image">
+        </div>
+    </div>
+
+    <script>
+        const searchButton = document.getElementById('search-btn');
+        const searchInput = document.getElementById('employee-id');
+
+        searchButton.addEventListener('click', () => {
+            const employeeId = searchInput.value.trim();
+            if (employeeId) {
+                // Redirect to the Django endpoint with employee_id as a query parameter
+                window.location.href = `/resume/?employee_id=${employeeId}`;
+            } else {
+                alert('Please enter a valid Employee ID.');
+            }
+        });
+    </script>
+</body>
+</html>
